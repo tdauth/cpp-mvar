@@ -25,3 +25,4 @@ addons:
       - cmake-data
       - cmake
       - valgrind
+      - lcov
