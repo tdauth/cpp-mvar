@@ -8,175 +8,184 @@
 namespace mvar
 {
 
-    template <typename T>
-    class MVar
-    {
-    public:
-        using Self = MVar<T>;
+template <typename T>
+class MVar
+{
+	public:
+	using Self = MVar<T>;
 
-        MVar() = default;
-        explicit MVar(T &&v) : v(v)
-        {
-        }
+	MVar() = default;
+	explicit MVar(T &&v) : v(v)
+	{
+	}
 
-        MVar(const Self &other) = delete;
-        Self &operator=(const Self &other) = delete;
+	MVar(const Self &other) = delete;
+	Self &operator=(const Self &other) = delete;
 
-        void put(T &&v)
-        {
-            {
-                std::unique_lock<std::mutex> l(m);
-                putCondition.wait(l, [this] { return !this->v; });
-                this->v = v;
-            }
+	void put(T &&v)
+	{
+		{
+			std::unique_lock<std::mutex> l(m);
+			putCondition.wait(l, [this] { return !this->v; });
+			this->v = v;
+		}
 
-            takeCondition.notify_all();
-        }
-        
-         bool tryPut(T &&v) {
-            {
-                std::unique_lock<std::mutex> l(m);
+		takeCondition.notify_all();
+	}
 
-                if (this->v) {
-                    return false;
-                }
+	bool tryPut(T &&v)
+	{
+		{
+			std::unique_lock<std::mutex> l(m);
 
-                this->v = v;
-                return true;
-            }
+			if (this->v)
+			{
+				return false;
+			}
 
-            takeCondition.notify_all();
-        }
+			this->v = v;
+			return true;
+		}
 
-        T take()
-        {
-            std::optional<T> r;
+		takeCondition.notify_all();
+	}
 
-            {
-                std::unique_lock<std::mutex> l(m);
-                takeCondition.wait(l, [this] { return this->v; });
-                r = std::move(*v);
-                v.reset();
-            }
+	T take()
+	{
+		std::optional<T> r;
 
-            putCondition.notify_all();
+		{
+			std::unique_lock<std::mutex> l(m);
+			takeCondition.wait(l, [this] { return this->v; });
+			r = std::move(*v);
+			v.reset();
+		}
 
-            return *r;
-        }
-        
-        std::optional<T> tryTake() {
-             std::optional<T> r;
-            
-             {
-                std::unique_lock<std::mutex> l(m);
-                r = std::move(*v);
-                v.reset();
-            }
-            
-            return r;
-        }
+		putCondition.notify_all();
 
-        const T &read()
-        {
-            std::unique_lock<std::mutex> l(m);
-            takeCondition.wait(l, [this] { return this->v; });
+		return *r;
+	}
 
-            return *v;
-        }
+	std::optional<T> tryTake()
+	{
+		std::optional<T> r;
 
-        bool isEmpty()
-        {
-            std::unique_lock<std::mutex> l(m);
-            return !v;
-        }
-        
-        T swapMVar(T &&v) {
-            auto r = take();
-            put(std::move(v));
-            return r;
-        }
+		{
+			std::unique_lock<std::mutex> l(m);
+			r = std::move(*v);
+			v.reset();
+		}
 
-    private:
-        std::optional<T> v;
-        std::mutex m;
-        std::condition_variable takeCondition;
-        std::condition_variable putCondition;
-    };
+		return r;
+	}
 
-    template <>
-    class MVar<void>
-    {
-    public:
-        using Self = MVar<void>;
+	const T &read()
+	{
+		std::unique_lock<std::mutex> l(m);
+		takeCondition.wait(l, [this] { return this->v; });
 
-        MVar() = default;
-        MVar(const Self &other) = delete;
-        Self &operator=(const Self &other) = delete;
+		return *v;
+	}
 
-        void put()
-        {
-            {
-                std::unique_lock<std::mutex> l(m);
-                putCondition.wait(l, [this] { return !this->v; });
-                this->v = true;
-            }
+	bool isEmpty()
+	{
+		std::unique_lock<std::mutex> l(m);
+		return !v;
+	}
 
-            takeCondition.notify_all();
-        }
-        
-        bool tryPut() {
-            {
-                std::unique_lock<std::mutex> l(m);
-                if (this->v) {
-                    return false;
-                }
+	T swapMVar(T &&v)
+	{
+		auto r = take();
+		put(std::move(v));
+		return r;
+	}
 
-                this->v = true;
-                return true;
-            }
+	private:
+	std::optional<T> v;
+	std::mutex m;
+	std::condition_variable takeCondition;
+	std::condition_variable putCondition;
+};
 
-            takeCondition.notify_all();
-        }
+template <>
+class MVar<void>
+{
+	public:
+	using Self = MVar<void>;
 
-        void take()
-        {
-            {
-                std::unique_lock<std::mutex> l(m);
-                takeCondition.wait(l, [this] { return this->v; });
-                this->v = false;
-            }
+	MVar() = default;
+	MVar(const Self &other) = delete;
+	Self &operator=(const Self &other) = delete;
 
-            putCondition.notify_all();
-        }
-        
-        bool tryTake() {
-                std::unique_lock<std::mutex> l(m);
-                auto r = v;
-                
-                if (r) { v = false; }
-                
-                return r;
-            
-        }
+	void put()
+	{
+		{
+			std::unique_lock<std::mutex> l(m);
+			putCondition.wait(l, [this] { return !this->v; });
+			this->v = true;
+		}
 
-        void read()
-        {
-            std::unique_lock<std::mutex> l(m);
-            takeCondition.wait(l, [this] { return this->v; });
-        }
+		takeCondition.notify_all();
+	}
 
-        bool isEmpty()
-        {
-            std::unique_lock<std::mutex> l(m);
-            return !v;
-        }
+	bool tryPut()
+	{
+		{
+			std::unique_lock<std::mutex> l(m);
+			if (this->v)
+			{
+				return false;
+			}
 
-    private:
-        bool v{false};
-        std::mutex m;
-        std::condition_variable takeCondition;
-        std::condition_variable putCondition;
-    };
-}
+			this->v = true;
+			return true;
+		}
+
+		takeCondition.notify_all();
+	}
+
+	void take()
+	{
+		{
+			std::unique_lock<std::mutex> l(m);
+			takeCondition.wait(l, [this] { return this->v; });
+			this->v = false;
+		}
+
+		putCondition.notify_all();
+	}
+
+	bool tryTake()
+	{
+		std::unique_lock<std::mutex> l(m);
+		auto r = v;
+
+		if (r)
+		{
+			v = false;
+		}
+
+		return r;
+	}
+
+	void read()
+	{
+		std::unique_lock<std::mutex> l(m);
+		takeCondition.wait(l, [this] { return this->v; });
+	}
+
+	bool isEmpty()
+	{
+		std::unique_lock<std::mutex> l(m);
+		return !v;
+	}
+
+	private:
+	bool v{false};
+	std::mutex m;
+	std::condition_variable takeCondition;
+	std::condition_variable putCondition;
+};
+} // namespace mvar
 
 #endif // MVAR_MVAR_HPP
