@@ -9,7 +9,7 @@ script:
   - sudo ln -sf /usr/bin/g++-8 /usr/bin/g++
   # Check versions of gcc, g++ and cmake
   - gcc -v && g++ -v && cmake --version
-  - bash ./buildcoverage.sh
+  - bash ./build.sh
 
 addons:
   apt:
