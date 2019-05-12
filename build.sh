@@ -9,8 +9,10 @@ fi
 CC="/usr/bin/gcc"
 CXX="/usr/bin/g++"
 
-GCC_COVERAGE_COMPILE_FLAGS="-g -O0 -coverage -fprofile-arcs -ftest-coverage --gcov-tool /usr/bin/gcov"
+GCC_COVERAGE_COMPILE_FLAGS="-g -O0 -coverage -fprofile-arcs -ftest-coverage"
 GCC_COVERAGE_LINK_FLAGS="-coverage -lgcov"
+
+GCOV_PATH="/usr/bin/gcov"
 
 # Configure and build everything:
 cd "$BUILD_DIR"
@@ -27,15 +29,15 @@ fi
 rm -r "./Testing" || true
 
 # Empty coverage data:
-lcov --zerocounters  --directory .
+lcov --gcov-tool "$GCOV_PATH" --zerocounters  --directory .
 
 # Pass longer timeouts since the shared test may take longer:
 ctest -T test --timeout 5000
 
 # Collect coverage data:
-lcov --directory . --capture --output-file my_prog.info
+lcov --gcov-tool "$GCOV_PATH" --directory . --capture --output-file my_prog.info
 # Remove coverage data from test code and external libraries:
-lcov --remove my_prog.info '/usr/include/*' '/usr/lib/*' '*$BUILD_DIR/*' '*/src/test/*' -o my_prog_filtered.info
+lcov --gcov-tool "$GCOV_PATH" --remove my_prog.info '/usr/include/*' '/usr/lib/*' '*$BUILD_DIR/*' '*/src/test/*' -o my_prog_filtered.info
 # Generate coverage HTML output:
 genhtml --output-directory coverage \
   --demangle-cpp --num-spaces 2 --sort \
