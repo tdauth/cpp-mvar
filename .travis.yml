@@ -9,6 +9,7 @@ script:
   - sudo ln -sf /usr/bin/g++-8 /usr/bin/g++
   # Check versions of gcc, g++ and cmake
   - gcc -v && g++ -v && cmake --version
+  - dpkg-query -L gcc-8 | grep gcov
   - bash ./build.sh
 
 addons:
