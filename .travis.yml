@@ -7,6 +7,7 @@ script:
   # Link gcc-6 and g++-6 to their standard commands
   - sudo ln -sf /usr/bin/gcc-8 /usr/bin/gcc
   - sudo ln -sf /usr/bin/g++-8 /usr/bin/g++
+  - sudo ln -sf /usr/bin/gcov-8 /usr/bin/gcov
   # Check versions of gcc, g++ and cmake
   - gcc -v && g++ -v && cmake --version
   - dpkg-query -L gcc-8 | grep gcov

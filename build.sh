@@ -12,8 +12,6 @@ CXX="/usr/bin/g++"
 GCC_COVERAGE_COMPILE_FLAGS="-g -O0 -coverage -fprofile-arcs -ftest-coverage"
 GCC_COVERAGE_LINK_FLAGS="-coverage -lgcov"
 
-GCOV_PATH="/usr/bin/gcov"
-
 # Configure and build everything:
 cd "$BUILD_DIR"
 # Create a "compile_commands.json" file for analysis: http://eli.thegreenplace.net/2014/05/21/compilation-databases-for-clang-based-tools
@@ -29,15 +27,15 @@ fi
 rm -r "./Testing" || true
 
 # Empty coverage data:
-lcov --gcov-tool "$GCOV_PATH" --zerocounters  --directory .
+lcov --zerocounters  --directory .
 
 # Pass longer timeouts since the shared test may take longer:
 ctest -T test --timeout 5000
 
 # Collect coverage data:
-lcov --gcov-tool "$GCOV_PATH" --directory . --capture --output-file my_prog.info
+lcov --directory . --capture --output-file my_prog.info
 # Remove coverage data from test code and external libraries:
-lcov --gcov-tool "$GCOV_PATH" --remove my_prog.info '/usr/include/*' '/usr/lib/*' '*$BUILD_DIR/*' '*/src/test/*' -o my_prog_filtered.info
+lcov --remove my_prog.info '/usr/include/*' '/usr/lib/*' '*$BUILD_DIR/*' '*/src/test/*' -o my_prog_filtered.info
 # Generate coverage HTML output:
 genhtml --output-directory coverage \
   --demangle-cpp --num-spaces 2 --sort \
