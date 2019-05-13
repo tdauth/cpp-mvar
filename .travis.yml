@@ -8,9 +8,11 @@ script:
   - sudo ln -sf /usr/bin/gcc-8 /usr/bin/gcc
   - sudo ln -sf /usr/bin/g++-8 /usr/bin/g++
   - sudo ln -sf /usr/bin/gcov-8 /usr/bin/gcov
-  # Check versions of gcc, g++ and cmake
-  - gcc -v && g++ -v && cmake --version
-  - dpkg-query -L gcc-8 | grep gcov
+  - sudo ln -sf /usr/bin/gcov-dump-8 /usr/bin/gcov-dump
+  - sudo ln -sf /usr/bin/gcov-tool-8 /usr/bin/gcov-tool
+  # Check versions of gcc, g++, gcov and cmake
+  - update-alternatives --query gcc
+  - gcc -v && g++ -v && gcov -v && cmake --version
   - bash ./build.sh
 
 addons:
