@@ -44,10 +44,11 @@ class MVar
 			}
 
 			this->v = v;
-			return true;
 		}
 
 		takeCondition.notify_all();
+
+		return true;
 	}
 
 	T take()
@@ -57,7 +58,7 @@ class MVar
 		{
 			std::unique_lock<std::mutex> l(m);
 			takeCondition.wait(l, [this] { return this->v; });
-			r = std::move(*v);
+			r = std::move(v);
 			v.reset();
 		}
 
@@ -72,7 +73,7 @@ class MVar
 
 		{
 			std::unique_lock<std::mutex> l(m);
-			r = std::move(*v);
+			r = std::move(v);
 			v.reset();
 		}
 
@@ -87,16 +88,26 @@ class MVar
 		return *v;
 	}
 
+	const std::optional<T> &tryRead()
+	{
+
+		std::unique_lock<std::mutex> l(m);
+
+		return v;
+	}
+
 	bool isEmpty()
 	{
 		std::unique_lock<std::mutex> l(m);
+
 		return !v;
 	}
 
-	T swapMVar(T &&v)
+	T swap(T &&v)
 	{
 		auto r = take();
 		put(std::move(v));
+
 		return r;
 	}
 
@@ -132,16 +143,18 @@ class MVar<void>
 	{
 		{
 			std::unique_lock<std::mutex> l(m);
+
 			if (this->v)
 			{
 				return false;
 			}
 
 			this->v = true;
-			return true;
 		}
 
 		takeCondition.notify_all();
+
+		return true;
 	}
 
 	void take()
@@ -174,9 +187,17 @@ class MVar<void>
 		takeCondition.wait(l, [this] { return this->v; });
 	}
 
+	bool tryRead()
+	{
+		std::unique_lock<std::mutex> l(m);
+
+		return v;
+	}
+
 	bool isEmpty()
 	{
 		std::unique_lock<std::mutex> l(m);
+
 		return !v;
 	}
 
