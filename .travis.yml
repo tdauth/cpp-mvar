@@ -33,4 +33,4 @@ addons:
       - cmake-data
       - cmake
       - valgrind
-      - lcov1.13-4
+      - lcov
