@@ -1,4 +1,4 @@
-#C++ MVar
+# C++ MVar
 
 [![Build Status](https://travis-ci.org/tdauth/cpp-mvar.svg?branch=master)](https://travis-ci.org/tdauth/cpp-mvar)
 [![Code Coverage](https://img.shields.io/codecov/c/github/tdauth/cpp-mvar/master.svg)](https://codecov.io/github/tdauth/cpp-mvar?branch=master)
